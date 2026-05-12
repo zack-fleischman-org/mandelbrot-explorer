@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandelbrot Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #toggle-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: rgba(30, 30, 30, 0.9);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        #toggle-btn:hover {
+            background: rgba(50, 50, 50, 0.95);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        #settings {
+            position: fixed;
+            top: 60px;
+            right: 15px;
+            z-index: 999;
+            background: rgba(20, 20, 25, 0.95);
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 320px;
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        #settings.hidden {
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+        }
+
+        #settings h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-group select,
+        .setting-group input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .setting-group select {
+            cursor: pointer;
+        }
+
+        .setting-group select option {
+            background: #1a1a1f;
+            color: #fff;
+        }
+
+        .setting-group input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            padding: 0;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .iteration-value {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #4a9eff;
+            margin-top: 8px;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .info-box .label {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .info-box .value {
+            color: #4a9eff;
+            float: right;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: rgba(74, 158, 255, 0.2);
+            border-color: #4a9eff;
+        }
+
+        #reset-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4a9eff, #0066cc);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 5px;
+        }
+
+        #reset-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <button id="toggle-btn">⚙️ Settings</button>
+
+    <div id="settings">
+        <h2>Mandelbrot Explorer</h2>
+
+        <div class="setting-group">
+            <label>Color Scheme</label>
+            <select id="color-scheme">
+                <option value="classic">Classic</option>
+                <option value="fire">Fire</option>
+                <option value="ice">Ice</option>
+                <option value="electric">Electric</option>
+                <option value="rainbow">Rainbow</option>
+                <option value="ocean">Ocean</option>
+                <option value="sunset">Sunset</option>
+                <option value="monochrome">Monochrome</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label>Max Iterations</label>
+            <input type="range" id="max-iterations" min="50" max="2000" value="500">
+            <div class="iteration-value" id="iteration-display">500</div>
+        </div>
+
+        <div class="setting-group">
+            <label>Current View</label>
+            <div class="info-box">
+                <div><span class="label">Real:</span> <span class="value" id="info-real">-0.5</span></div>
+                <div><span class="label">Imag:</span> <span class="value" id="info-imag">0.0</span></div>
+                <div><span class="label">Zoom:</span> <span class="value" id="info-zoom">1.0x</span></div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <label>Location Presets</label>
+            <div class="preset-grid">
+                <button class="preset-btn" data-preset="seahorse">Seahorse Valley</button>
+                <button class="preset-btn" data-preset="elephant">Elephant Valley</button>
+                <button class="preset-btn" data-preset="spiral">Double Spiral</button>
+                <button class="preset-btn" data-preset="lightning">Lightning</button>
+                <button class="preset-btn" data-preset="starfish">Starfish</button>
+                <button class="preset-btn" data-preset="tendrils">Tendrils</button>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <button id="reset-btn">Reset View</button>
+        </div>
+
+        <div class="hint">
+            Drag to pan • Scroll to zoom • Press 'S' to toggle settings
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+        if (!gl) {
+            alert('WebGL not supported. Please use a modern browser.');
+            throw new Error('WebGL not supported');
+        }
+
+        // State
+        let centerX = -0.5;
+        let centerY = 0.0;
+        let zoom = 1.0;
+        let maxIterations = 500;
+        let colorScheme = 'classic';
+        let isDragging = false;
+        let lastX, lastY;
+
+        // Presets
+        const presets = {
+            seahorse: { x: -0.747, y: 0.1, zoom: 500 },
+            elephant: { x: 0.275, y: 0.006, zoom: 300 },
+            spiral: { x: -0.7463, y: 0.1102, zoom: 5000 },
+            lightning: { x: -1.315180982097868, y: 0.073481649996795, zoom: 10000 },
+            starfish: { x: -0.374004139, y: 0.659792175, zoom: 8000 },
+            tendrils: { x: -0.226266, y: 1.11617, zoom: 2000 }
+        };
+
+        // Vertex shader
+        const vertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+        // Fragment shader with color schemes
+        const fragmentShaderSource = `
+            precision highp float;
+
+            uniform vec2 u_resolution;
+            uniform vec2 u_center;
+            uniform float u_zoom;
+            uniform int u_maxIterations;
+            uniform int u_colorScheme;
+
+            vec3 hsv2rgb(vec3 c) {
+                vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            }
+
+            vec3 getColor(float t, int scheme) {
+                if (scheme == 0) { // Classic
+                    return hsv2rgb(vec3(t * 0.8 + 0.55, 0.9, 1.0));
+                } else if (scheme == 1) { // Fire
+                    return vec3(
+                        min(1.0, t * 3.0),
+                        max(0.0, min(1.0, t * 3.0 - 1.0)),
+                        max(0.0, t * 3.0 - 2.0)
+                    );
+                } else if (scheme == 2) { // Ice
+                    return vec3(
+                        0.7 + 0.3 * sin(t * 6.28),
+                        0.85 + 0.15 * sin(t * 6.28 + 2.0),
+                        1.0
+                    );
+                } else if (scheme == 3) { // Electric
+                    return vec3(
+                        0.5 + 0.5 * sin(t * 12.56),
+                        0.0,
+                        0.5 + 0.5 * cos(t * 12.56)
+                    );
+                } else if (scheme == 4) { // Rainbow
+                    return hsv2rgb(vec3(t, 1.0, 1.0));
+                } else if (scheme == 5) { // Ocean
+                    return vec3(
+                        0.0,
+                        0.2 + 0.4 * t,
+                        0.4 + 0.6 * t
+                    );
+                } else if (scheme == 6) { // Sunset
+                    return vec3(
+                        0.9 + 0.1 * sin(t * 3.14),
+                        0.3 + 0.4 * t,
+                        0.1 + 0.3 * sin(t * 6.28)
+                    );
+                } else { // Monochrome
+                    float v = 0.5 + 0.5 * sin(t * 12.56);
+                    return vec3(v, v, v);
+                }
+            }
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / u_resolution;
+                float aspect = u_resolution.x / u_resolution.y;
+
+                float scale = 3.0 / u_zoom;
+                vec2 c = vec2(
+                    (uv.x - 0.5) * scale * aspect + u_center.x,
+                    (uv.y - 0.5) * scale + u_center.y
+                );
+
+                vec2 z = vec2(0.0);
+                int iterations = 0;
+
+                for (int i = 0; i < 2000; i++) {
+                    if (i >= u_maxIterations) break;
+
+                    float x = z.x * z.x - z.y * z.y + c.x;
+                    float y = 2.0 * z.x * z.y + c.y;
+                    z = vec2(x, y);
+
+                    if (dot(z, z) > 4.0) break;
+                    iterations++;
+                }
+
+                if (iterations >= u_maxIterations) {
+                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                } else {
+                    float t = float(iterations) / float(u_maxIterations);
+                    t = sqrt(t);
+                    vec3 color = getColor(t, u_colorScheme);
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            }
+        `;
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            return program;
+        }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1, -1, 1, -1, -1, 1,
+            -1, 1, 1, -1, 1, 1
+        ]), gl.STATIC_DRAW);
+
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+        const centerLocation = gl.getUniformLocation(program, 'u_center');
+        const zoomLocation = gl.getUniformLocation(program, 'u_zoom');
+        const maxIterationsLocation = gl.getUniformLocation(program, 'u_maxIterations');
+        const colorSchemeLocation = gl.getUniformLocation(program, 'u_colorScheme');
+
+        const colorSchemes = ['classic', 'fire', 'ice', 'electric', 'rainbow', 'ocean', 'sunset', 'monochrome'];
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            render();
+        }
+
+        function render() {
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.useProgram(program);
+
+            gl.enableVertexAttribArray(positionLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+            gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+            gl.uniform2f(centerLocation, centerX, centerY);
+            gl.uniform1f(zoomLocation, zoom);
+            gl.uniform1i(maxIterationsLocation, maxIterations);
+            gl.uniform1i(colorSchemeLocation, colorSchemes.indexOf(colorScheme));
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            updateInfo();
+        }
+
+        function updateInfo() {
+            document.getElementById('info-real').textContent = centerX.toFixed(10);
+            document.getElementById('info-imag').textContent = centerY.toFixed(10);
+            document.getElementById('info-zoom').textContent = zoom.toFixed(1) + 'x';
+        }
+
+        // Event listeners
+        window.addEventListener('resize', resize);
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+
+            const scale = 3.0 / zoom;
+            const aspect = canvas.width / canvas.height;
+
+            centerX -= (dx / canvas.width) * scale * aspect;
+            centerY += (dy / canvas.height) * scale;
+
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            render();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const scale = 3.0 / zoom;
+            const aspect = canvas.width / canvas.height;
+
+            const mouseRealBefore = (x / canvas.width - 0.5) * scale * aspect + centerX;
+            const mouseImagBefore = (0.5 - y / canvas.height) * scale + centerY;
+
+            const factor = e.deltaY > 0 ? 0.85 : 1.18;
+            zoom *= factor;
+            zoom = Math.max(0.5, Math.min(zoom, 1e14));
+
+            const newScale = 3.0 / zoom;
+            const mouseRealAfter = (x / canvas.width - 0.5) * newScale * aspect + centerX;
+            const mouseImagAfter = (0.5 - y / canvas.height) * newScale + centerY;
+
+            centerX += mouseRealBefore - mouseRealAfter;
+            centerY += mouseImagBefore - mouseImagAfter;
+
+            render();
+        }, { passive: false });
+
+        // Touch support
+        let touchStartDistance = 0;
+        let touchStartZoom = 1;
+        let touchStartX, touchStartY;
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+                touchStartZoom = zoom;
+                touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+
+            if (e.touches.length === 1 && isDragging) {
+                const dx = e.touches[0].clientX - lastX;
+                const dy = e.touches[0].clientY - lastY;
+
+                const scale = 3.0 / zoom;
+                const aspect = canvas.width / canvas.height;
+
+                centerX -= (dx / canvas.width) * scale * aspect;
+                centerY += (dy / canvas.height) * scale;
+
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+
+                render();
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                zoom = touchStartZoom * (distance / touchStartDistance);
+                zoom = Math.max(0.5, Math.min(zoom, 1e14));
+
+                render();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // UI Controls
+        document.getElementById('toggle-btn').addEventListener('click', () => {
+            document.getElementById('settings').classList.toggle('hidden');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 's' || e.key === 'S') {
+                document.getElementById('settings').classList.toggle('hidden');
+            }
+        });
+
+        document.getElementById('color-scheme').addEventListener('change', (e) => {
+            colorScheme = e.target.value;
+            render();
+        });
+
+        document.getElementById('max-iterations').addEventListener('input', (e) => {
+            maxIterations = parseInt(e.target.value);
+            document.getElementById('iteration-display').textContent = maxIterations;
+            render();
+        });
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const preset = presets[btn.dataset.preset];
+                centerX = preset.x;
+                centerY = preset.y;
+                zoom = preset.zoom;
+                render();
+            });
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            centerX = -0.5;
+            centerY = 0.0;
+            zoom = 1.0;
+            render();
+        });
+
+        // Initialize
+        canvas.style.cursor = 'grab';
+        resize();
+    </script>
+</body>
+</html>
