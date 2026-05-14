@@ -53,7 +53,7 @@
             color: #fff;
             padding: 20px;
             border-radius: 12px;
-            width: 320px;
+            width: 340px;
             max-height: calc(100vh - 90px);
             overflow-y: auto;
             backdrop-filter: blur(15px);
@@ -81,13 +81,32 @@
             margin-bottom: 20px;
         }
 
-        .setting-group label {
+        .setting-group > label {
             display: block;
             margin-bottom: 8px;
             font-size: 13px;
             color: rgba(255, 255, 255, 0.7);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        .checkbox-label {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            font-size: 14px !important;
+            color: #fff !important;
+            cursor: pointer;
+            margin-bottom: 0 !important;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #4a9eff;
         }
 
         .setting-group select,
@@ -105,7 +124,8 @@
             cursor: pointer;
         }
 
-        .setting-group select option {
+        .setting-group select option,
+        .setting-group select optgroup {
             background: #1a1a1f;
             color: #fff;
         }
@@ -205,6 +225,98 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .gradient-preview {
+            width: 100%;
+            height: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: crosshair;
+            margin-bottom: 4px;
+        }
+
+        .gradient-stops {
+            position: relative;
+            width: 100%;
+            height: 22px;
+            margin-bottom: 8px;
+        }
+
+        .gradient-stop {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            top: 4px;
+            cursor: grab;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-sizing: border-box;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .gradient-stop:hover {
+            transform: translateX(-50%) scale(1.15);
+        }
+
+        .gradient-stop.selected {
+            border-color: #4a9eff;
+            box-shadow: 0 0 8px rgba(74, 158, 255, 0.9);
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .gradient-stop.dragging {
+            cursor: grabbing;
+        }
+
+        .gradient-controls {
+            display: grid;
+            grid-template-columns: 40px 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .gradient-controls input[type="color"] {
+            width: 40px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .gradient-controls button,
+        .gradient-actions button {
+            padding: 8px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .gradient-controls button:hover,
+        .gradient-actions button:hover {
+            background: rgba(74, 158, 255, 0.2);
+            border-color: #4a9eff;
+        }
+
+        .gradient-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .gradient-hint {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -230,15 +342,47 @@
         <div class="setting-group">
             <label>Color Scheme</label>
             <select id="color-scheme">
-                <option value="classic">Classic</option>
-                <option value="fire">Fire</option>
-                <option value="ice">Ice</option>
-                <option value="electric">Electric</option>
-                <option value="rainbow">Rainbow</option>
-                <option value="ocean">Ocean</option>
-                <option value="sunset">Sunset</option>
-                <option value="monochrome">Monochrome</option>
+                <optgroup label="Built-in" id="builtin-optgroup">
+                    <option value="classic">Classic</option>
+                    <option value="fire">Fire</option>
+                    <option value="ice">Ice</option>
+                    <option value="electric">Electric</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="monochrome">Monochrome</option>
+                    <option value="cosmic">Cosmic</option>
+                    <option value="neon">Neon</option>
+                    <option value="deepocean">Deep Ocean</option>
+                    <option value="psychedelic">Psychedelic</option>
+                </optgroup>
+                <optgroup label="Custom" id="custom-optgroup"></optgroup>
             </select>
+        </div>
+
+        <div class="setting-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="smooth-color" checked>
+                Smooth Coloring
+            </label>
+        </div>
+
+        <div class="setting-group">
+            <label>Gradient Editor</label>
+            <div id="gradient-preview" class="gradient-preview"></div>
+            <div id="gradient-stops" class="gradient-stops"></div>
+            <div class="gradient-controls">
+                <input type="color" id="stop-color" value="#ff0000">
+                <button id="add-stop-btn">Add Stop</button>
+                <button id="delete-stop-btn">Delete Stop</button>
+            </div>
+            <div class="gradient-actions">
+                <button id="save-scheme-btn">Save Scheme...</button>
+                <button id="delete-scheme-btn">Delete Scheme</button>
+            </div>
+            <div class="gradient-hint">
+                Click bar to add stop • Drag to move • Double-click to delete
+            </div>
         </div>
 
         <div class="setting-group">
@@ -286,16 +430,16 @@
             throw new Error('WebGL not supported');
         }
 
-        // State
+        // ---------- State ----------
         let centerX = -0.5;
         let centerY = 0.0;
         let zoom = 1.0;
         let maxIterations = 500;
-        let colorScheme = 'classic';
+        let smoothColor = true;
         let isDragging = false;
         let lastX, lastY;
 
-        // Presets
+        // Location presets
         const presets = {
             seahorse: { x: -0.747, y: 0.1, zoom: 500 },
             elephant: { x: 0.275, y: 0.006, zoom: 300 },
@@ -305,7 +449,114 @@
             tendrils: { x: -0.226266, y: 1.11617, zoom: 2000 }
         };
 
-        // Vertex shader
+        // ---------- Built-in color schemes (gradient stop arrays) ----------
+        const builtInSchemes = {
+            classic: [
+                { pos: 0.00, color: "#000a3d" },
+                { pos: 0.20, color: "#0061cc" },
+                { pos: 0.40, color: "#00d195" },
+                { pos: 0.60, color: "#a8e600" },
+                { pos: 0.80, color: "#ff8400" },
+                { pos: 1.00, color: "#ff003d" }
+            ],
+            fire: [
+                { pos: 0.00, color: "#000000" },
+                { pos: 0.33, color: "#cc0000" },
+                { pos: 0.66, color: "#ffaa00" },
+                { pos: 1.00, color: "#ffffe6" }
+            ],
+            ice: [
+                { pos: 0.00, color: "#001a4d" },
+                { pos: 0.40, color: "#3399ff" },
+                { pos: 0.70, color: "#99ccff" },
+                { pos: 1.00, color: "#ffffff" }
+            ],
+            electric: [
+                { pos: 0.00, color: "#1a0033" },
+                { pos: 0.25, color: "#ff00ff" },
+                { pos: 0.50, color: "#1a0033" },
+                { pos: 0.75, color: "#00ffff" },
+                { pos: 1.00, color: "#1a0033" }
+            ],
+            rainbow: [
+                { pos: 0.00, color: "#ff0000" },
+                { pos: 0.17, color: "#ff8800" },
+                { pos: 0.33, color: "#ffff00" },
+                { pos: 0.50, color: "#00ff00" },
+                { pos: 0.67, color: "#0099ff" },
+                { pos: 0.83, color: "#5500ff" },
+                { pos: 1.00, color: "#ff00ff" }
+            ],
+            ocean: [
+                { pos: 0.00, color: "#000033" },
+                { pos: 0.50, color: "#0066aa" },
+                { pos: 1.00, color: "#33ddff" }
+            ],
+            sunset: [
+                { pos: 0.00, color: "#1a0033" },
+                { pos: 0.30, color: "#990066" },
+                { pos: 0.60, color: "#ff6600" },
+                { pos: 0.85, color: "#ffcc00" },
+                { pos: 1.00, color: "#ffffcc" }
+            ],
+            monochrome: [
+                { pos: 0.00, color: "#000000" },
+                { pos: 0.50, color: "#ffffff" },
+                { pos: 1.00, color: "#000000" }
+            ],
+            cosmic: [
+                { pos: 0.00, color: "#0a0033" },
+                { pos: 0.30, color: "#4d0099" },
+                { pos: 0.55, color: "#cc00ff" },
+                { pos: 0.80, color: "#00ddff" },
+                { pos: 1.00, color: "#ffffff" }
+            ],
+            neon: [
+                { pos: 0.00, color: "#000000" },
+                { pos: 0.20, color: "#00ff66" },
+                { pos: 0.40, color: "#ff00cc" },
+                { pos: 0.60, color: "#ffff00" },
+                { pos: 0.80, color: "#00ffff" },
+                { pos: 1.00, color: "#ffffff" }
+            ],
+            deepocean: [
+                { pos: 0.00, color: "#000814" },
+                { pos: 0.30, color: "#003045" },
+                { pos: 0.50, color: "#006080" },
+                { pos: 0.70, color: "#00a8b3" },
+                { pos: 0.90, color: "#a8e6f0" },
+                { pos: 1.00, color: "#ffffff" }
+            ],
+            psychedelic: [
+                { pos: 0.00, color: "#ff0000" },
+                { pos: 0.10, color: "#ffaa00" },
+                { pos: 0.20, color: "#ffff00" },
+                { pos: 0.30, color: "#00ff00" },
+                { pos: 0.40, color: "#00ffff" },
+                { pos: 0.50, color: "#0066ff" },
+                { pos: 0.60, color: "#9900ff" },
+                { pos: 0.70, color: "#ff00ff" },
+                { pos: 0.80, color: "#ff0099" },
+                { pos: 0.90, color: "#ff3300" },
+                { pos: 1.00, color: "#ffcc00" }
+            ]
+        };
+
+        // Load custom schemes from localStorage
+        let customSchemes = {};
+        try {
+            customSchemes = JSON.parse(localStorage.getItem('mandelbrot_custom_schemes') || '{}');
+            if (typeof customSchemes !== 'object' || customSchemes === null) customSchemes = {};
+        } catch (e) {
+            customSchemes = {};
+        }
+
+        let currentSchemeName = 'classic';
+        let currentStops = builtInSchemes.classic.map(s => ({ ...s }));
+        let selectedStopIndex = null;
+        let draggingStop = null;
+
+        // ---------- Vertex shader ----------
         const vertexShaderSource = `
             attribute vec2 a_position;
             void main() {
@@ -313,98 +564,133 @@
             }
         `;
 
-        // Fragment shader with color schemes
+        // ---------- Fragment shader (double-double precision) ----------
         const fragmentShaderSource = `
             precision highp float;
 
             uniform vec2 u_resolution;
-            uniform vec2 u_center;
+            uniform vec4 u_center;   // (cx_hi, cx_lo, cy_hi, cy_lo)
             uniform float u_zoom;
             uniform int u_maxIterations;
-            uniform int u_colorScheme;
+            uniform int u_smoothColor;
+            uniform sampler2D u_colorGradient;
 
-            vec3 hsv2rgb(vec3 c) {
-                vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-                vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-                return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            // Veltkamp split factor for float32 (24-bit mantissa): 2^12 + 1
+            const float SPLIT = 4097.0;
+
+            // ---------- Exact float-pair primitives ----------
+            vec2 twoSum(float a, float b) {
+                float s = a + b;
+                float aPrime = s - b;
+                float bPrime = s - aPrime;
+                float da = a - aPrime;
+                float db = b - bPrime;
+                return vec2(s, da + db);
             }
 
-            vec3 getColor(float t, int scheme) {
-                if (scheme == 0) { // Classic
-                    return hsv2rgb(vec3(t * 0.8 + 0.55, 0.9, 1.0));
-                } else if (scheme == 1) { // Fire
-                    return vec3(
-                        min(1.0, t * 3.0),
-                        max(0.0, min(1.0, t * 3.0 - 1.0)),
-                        max(0.0, t * 3.0 - 2.0)
-                    );
-                } else if (scheme == 2) { // Ice
-                    return vec3(
-                        0.7 + 0.3 * sin(t * 6.28),
-                        0.85 + 0.15 * sin(t * 6.28 + 2.0),
-                        1.0
-                    );
-                } else if (scheme == 3) { // Electric
-                    return vec3(
-                        0.5 + 0.5 * sin(t * 12.56),
-                        0.0,
-                        0.5 + 0.5 * cos(t * 12.56)
-                    );
-                } else if (scheme == 4) { // Rainbow
-                    return hsv2rgb(vec3(t, 1.0, 1.0));
-                } else if (scheme == 5) { // Ocean
-                    return vec3(
-                        0.0,
-                        0.2 + 0.4 * t,
-                        0.4 + 0.6 * t
-                    );
-                } else if (scheme == 6) { // Sunset
-                    return vec3(
-                        0.9 + 0.1 * sin(t * 3.14),
-                        0.3 + 0.4 * t,
-                        0.1 + 0.3 * sin(t * 6.28)
-                    );
-                } else { // Monochrome
-                    float v = 0.5 + 0.5 * sin(t * 12.56);
-                    return vec3(v, v, v);
-                }
+            vec2 fastTwoSum(float a, float b) {
+                float s = a + b;
+                float bPrime = s - a;
+                return vec2(s, b - bPrime);
+            }
+
+            vec2 twoProduct(float a, float b) {
+                float p = a * b;
+                float ca = SPLIT * a;
+                float aHi = ca - (ca - a);
+                float aLo = a - aHi;
+                float cb = SPLIT * b;
+                float bHi = cb - (cb - b);
+                float bLo = b - bHi;
+                float err = aHi * bHi - p;
+                err = err + aHi * bLo;
+                err = err + aLo * bHi;
+                err = err + aLo * bLo;
+                return vec2(p, err);
+            }
+
+            // ---------- Double-double operations ----------
+            vec2 ddAdd(vec2 a, vec2 b) {
+                vec2 s1 = twoSum(a.x, b.x);
+                float s2 = a.y + b.y;
+                return fastTwoSum(s1.x, s1.y + s2);
+            }
+
+            vec2 ddSub(vec2 a, vec2 b) {
+                return ddAdd(a, vec2(-b.x, -b.y));
+            }
+
+            vec2 ddMul(vec2 a, vec2 b) {
+                vec2 p1 = twoProduct(a.x, b.x);
+                float p2 = a.x * b.y + a.y * b.x;
+                return fastTwoSum(p1.x, p1.y + p2);
+            }
+
+            // ---------- Smooth iteration count ----------
+            float smoothIter(int iter, float zr, float zi) {
+                float mag2 = zr * zr + zi * zi;
+                if (mag2 <= 1.0) return float(iter);
+                float log_zn = log(mag2) * 0.5;
+                float nu = log(log_zn / 0.693147180559945) / 0.693147180559945;
+                return float(iter) + 1.0 - nu;
             }
 
             void main() {
                 vec2 uv = gl_FragCoord.xy / u_resolution;
                 float aspect = u_resolution.x / u_resolution.y;
-
                 float scale = 3.0 / u_zoom;
-                vec2 c = vec2(
-                    (uv.x - 0.5) * scale * aspect + u_center.x,
-                    (uv.y - 0.5) * scale + u_center.y
-                );
 
-                vec2 z = vec2(0.0);
+                // Pixel offset in complex plane (exact in float32 for sub-pixel work)
+                float pxRe = (uv.x - 0.5) * scale * aspect;
+                float pxIm = (uv.y - 0.5) * scale;
+
+                // c = center + offset, using double-double addition
+                vec2 cRe = ddAdd(vec2(u_center.x, u_center.y), vec2(pxRe, 0.0));
+                vec2 cIm = ddAdd(vec2(u_center.z, u_center.w), vec2(pxIm, 0.0));
+
+                vec2 zx = vec2(0.0, 0.0);
+                vec2 zy = vec2(0.0, 0.0);
                 int iterations = 0;
+                bool escaped = false;
 
                 for (int i = 0; i < 2000; i++) {
                     if (i >= u_maxIterations) break;
 
-                    float x = z.x * z.x - z.y * z.y + c.x;
-                    float y = 2.0 * z.x * z.y + c.y;
-                    z = vec2(x, y);
+                    // z = z^2 + c
+                    vec2 zx2 = ddMul(zx, zx);
+                    vec2 zy2 = ddMul(zy, zy);
+                    vec2 xy  = ddMul(zx, zy);
 
-                    if (dot(z, z) > 4.0) break;
+                    vec2 newZx = ddAdd(ddSub(zx2, zy2), cRe);
+                    vec2 newZy = ddAdd(ddAdd(xy, xy), cIm);
+
+                    zx = newZx;
+                    zy = newZy;
+
+                    // Escape test on hi component (fast and correct for |z|^2 > 4)
+                    float mag2 = zx.x * zx.x + zy.x * zy.x;
+                    if (mag2 > 4.0) { escaped = true; break; }
                     iterations++;
                 }
 
-                if (iterations >= u_maxIterations) {
+                if (!escaped) {
                     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
                 } else {
-                    float t = float(iterations) / float(u_maxIterations);
+                    float t;
+                    if (u_smoothColor == 1) {
+                        t = smoothIter(iterations, zx.x, zy.x) / float(u_maxIterations);
+                    } else {
+                        t = float(iterations) / float(u_maxIterations);
+                    }
+                    t = clamp(t, 0.0, 1.0);
                     t = sqrt(t);
-                    vec3 color = getColor(t, u_colorScheme);
+                    vec3 color = texture2D(u_colorGradient, vec2(t, 0.5)).rgb;
                     gl_FragColor = vec4(color, 1.0);
                 }
             }
         `;
 
+        // ---------- Shader compilation ----------
         function createShader(gl, type, source) {
             const shader = gl.createShader(type);
             gl.shaderSource(shader, source);
@@ -446,10 +732,67 @@
         const centerLocation = gl.getUniformLocation(program, 'u_center');
         const zoomLocation = gl.getUniformLocation(program, 'u_zoom');
         const maxIterationsLocation = gl.getUniformLocation(program, 'u_maxIterations');
-        const colorSchemeLocation = gl.getUniformLocation(program, 'u_colorScheme');
+        const smoothColorLocation = gl.getUniformLocation(program, 'u_smoothColor');
+        const colorGradientLocation = gl.getUniformLocation(program, 'u_colorGradient');
 
-        const colorSchemes = ['classic', 'fire', 'ice', 'electric', 'rainbow', 'ocean', 'sunset', 'monochrome'];
+        // ---------- Color gradient texture (256x1) ----------
+        const gradientTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, gradientTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+        function hexToRgb(hex) {
+            const m = /^#?([a-fA-F0-9]{6})$/.exec(hex.trim());
+            if (!m) return [255, 255, 255];
+            const v = parseInt(m[1], 16);
+            return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+        }
+
+        function buildGradientData(stops) {
+            const sorted = [...stops].sort((a, b) => a.pos - b.pos);
+            const data = new Uint8Array(256 * 4);
+            if (sorted.length === 0) {
+                for (let i = 0; i < 256; i++) {
+                    data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 0;
+                    data[i * 4 + 3] = 255;
+                }
+                return data;
+            }
+            for (let i = 0; i < 256; i++) {
+                const t = i / 255;
+                let lo = sorted[0];
+                let hi = sorted[sorted.length - 1];
+                for (let j = 0; j < sorted.length - 1; j++) {
+                    if (t >= sorted[j].pos && t <= sorted[j + 1].pos) {
+                        lo = sorted[j];
+                        hi = sorted[j + 1];
+                        break;
+                    }
+                }
+                let f = 0;
+                const span = hi.pos - lo.pos;
+                if (span > 1e-9) f = (t - lo.pos) / span;
+                if (t <= sorted[0].pos) { lo = hi = sorted[0]; f = 0; }
+                if (t >= sorted[sorted.length - 1].pos) { lo = hi = sorted[sorted.length - 1]; f = 0; }
+                const [lr, lg, lb] = hexToRgb(lo.color);
+                const [hr, hg, hb] = hexToRgb(hi.color);
+                data[i * 4]     = Math.round(lr + (hr - lr) * f);
+                data[i * 4 + 1] = Math.round(lg + (hg - lg) * f);
+                data[i * 4 + 2] = Math.round(lb + (hb - lb) * f);
+                data[i * 4 + 3] = 255;
+            }
+            return data;
+        }
+
+        function rebuildGradientTexture() {
+            const data = buildGradientData(currentStops);
+            gl.bindTexture(gl.TEXTURE_2D, gradientTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        }
+
+        // ---------- Render ----------
         function resize() {
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr;
@@ -468,11 +811,21 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
+            // Split center coordinates into hi/lo using Math.fround
+            const cxHi = Math.fround(centerX);
+            const cxLo = centerX - cxHi;
+            const cyHi = Math.fround(centerY);
+            const cyLo = centerY - cyHi;
+
             gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-            gl.uniform2f(centerLocation, centerX, centerY);
+            gl.uniform4f(centerLocation, cxHi, cxLo, cyHi, cyLo);
             gl.uniform1f(zoomLocation, zoom);
             gl.uniform1i(maxIterationsLocation, maxIterations);
-            gl.uniform1i(colorSchemeLocation, colorSchemes.indexOf(colorScheme));
+            gl.uniform1i(smoothColorLocation, smoothColor ? 1 : 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, gradientTexture);
+            gl.uniform1i(colorGradientLocation, 0);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -480,12 +833,16 @@
         }
 
         function updateInfo() {
-            document.getElementById('info-real').textContent = centerX.toFixed(10);
-            document.getElementById('info-imag').textContent = centerY.toFixed(10);
-            document.getElementById('info-zoom').textContent = zoom.toFixed(1) + 'x';
+            document.getElementById('info-real').textContent = centerX.toFixed(14);
+            document.getElementById('info-imag').textContent = centerY.toFixed(14);
+            const z = zoom;
+            let zoomText;
+            if (z < 1e6) zoomText = z.toFixed(1) + 'x';
+            else zoomText = z.toExponential(2) + 'x';
+            document.getElementById('info-zoom').textContent = zoomText;
         }
 
-        // Event listeners
+        // ---------- Canvas interaction ----------
         window.addEventListener('resize', resize);
 
         canvas.addEventListener('mousedown', (e) => {
@@ -496,34 +853,42 @@
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-
-            const dx = e.clientX - lastX;
-            const dy = e.clientY - lastY;
-
-            const scale = 3.0 / zoom;
-            const aspect = canvas.width / canvas.height;
-
-            centerX -= (dx / canvas.width) * scale * aspect;
-            centerY += (dy / canvas.height) * scale;
-
-            lastX = e.clientX;
-            lastY = e.clientY;
-
-            render();
+            if (isDragging) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                const scale = 3.0 / zoom;
+                const aspect = canvas.width / canvas.height;
+                centerX -= (dx / canvas.width) * scale * aspect;
+                centerY += (dy / canvas.height) * scale;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                render();
+                return;
+            }
+            if (draggingStop !== null) {
+                const stopsContainer = document.getElementById('gradient-stops');
+                const rect = stopsContainer.getBoundingClientRect();
+                let pos = (e.clientX - rect.left) / rect.width;
+                pos = Math.max(0, Math.min(1, pos));
+                currentStops[draggingStop].pos = pos;
+                renderGradientEditor();
+                rebuildGradientTexture();
+                render();
+            }
         });
 
         window.addEventListener('mouseup', () => {
             isDragging = false;
             canvas.style.cursor = 'grab';
+            draggingStop = null;
         });
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
 
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
             const scale = 3.0 / zoom;
             const aspect = canvas.width / canvas.height;
@@ -548,7 +913,6 @@
         // Touch support
         let touchStartDistance = 0;
         let touchStartZoom = 1;
-        let touchStartX, touchStartY;
 
         canvas.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
@@ -561,8 +925,6 @@
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
                 touchStartDistance = Math.sqrt(dx * dx + dy * dy);
                 touchStartZoom = zoom;
-                touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             }
         });
 
@@ -572,25 +934,19 @@
             if (e.touches.length === 1 && isDragging) {
                 const dx = e.touches[0].clientX - lastX;
                 const dy = e.touches[0].clientY - lastY;
-
                 const scale = 3.0 / zoom;
                 const aspect = canvas.width / canvas.height;
-
                 centerX -= (dx / canvas.width) * scale * aspect;
                 centerY += (dy / canvas.height) * scale;
-
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
-
                 render();
             } else if (e.touches.length === 2) {
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
                 zoom = touchStartZoom * (distance / touchStartDistance);
                 zoom = Math.max(0.5, Math.min(zoom, 1e14));
-
                 render();
             }
         }, { passive: false });
@@ -599,28 +955,59 @@
             isDragging = false;
         });
 
-        // UI Controls
+        // ---------- UI: panel toggle ----------
         document.getElementById('toggle-btn').addEventListener('click', () => {
             document.getElementById('settings').classList.toggle('hidden');
         });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 's' || e.key === 'S') {
+                const target = e.target;
+                const tag = target && target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
                 document.getElementById('settings').classList.toggle('hidden');
             }
         });
 
+        // ---------- UI: scheme selection ----------
+        function selectScheme(name) {
+            let stops = null;
+            if (builtInSchemes[name]) {
+                stops = builtInSchemes[name];
+            } else if (customSchemes[name]) {
+                stops = customSchemes[name];
+            }
+            if (!stops) {
+                name = 'classic';
+                stops = builtInSchemes.classic;
+            }
+            currentSchemeName = name;
+            currentStops = stops.map(s => ({ ...s }));
+            selectedStopIndex = null;
+            renderGradientEditor();
+            rebuildGradientTexture();
+            render();
+            updateDeleteSchemeButton();
+        }
+
         document.getElementById('color-scheme').addEventListener('change', (e) => {
-            colorScheme = e.target.value;
+            selectScheme(e.target.value);
+        });
+
+        // ---------- UI: smooth color toggle ----------
+        document.getElementById('smooth-color').addEventListener('change', (e) => {
+            smoothColor = e.target.checked;
             render();
         });
 
+        // ---------- UI: iterations ----------
         document.getElementById('max-iterations').addEventListener('input', (e) => {
             maxIterations = parseInt(e.target.value);
             document.getElementById('iteration-display').textContent = maxIterations;
             render();
         });
 
+        // ---------- UI: location presets ----------
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const preset = presets[btn.dataset.preset];
@@ -638,8 +1025,175 @@
             render();
         });
 
-        // Initialize
+        // ---------- Gradient editor ----------
+        const gradientPreviewEl = document.getElementById('gradient-preview');
+        const gradientStopsEl = document.getElementById('gradient-stops');
+        const stopColorEl = document.getElementById('stop-color');
+
+        function renderGradientEditor() {
+            const sorted = [...currentStops].sort((a, b) => a.pos - b.pos);
+            const gradientCSS = 'linear-gradient(to right, ' +
+                sorted.map(s => `${s.color} ${(s.pos * 100).toFixed(2)}%`).join(', ') + ')';
+            gradientPreviewEl.style.background = gradientCSS;
+
+            gradientStopsEl.innerHTML = '';
+            currentStops.forEach((stop, idx) => {
+                const el = document.createElement('div');
+                el.className = 'gradient-stop' + (idx === selectedStopIndex ? ' selected' : '');
+                el.style.left = (stop.pos * 100) + '%';
+                el.style.background = stop.color;
+                el.title = `pos: ${stop.pos.toFixed(3)} • ${stop.color}`;
+
+                el.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    selectedStopIndex = idx;
+                    draggingStop = idx;
+                    el.classList.add('dragging');
+                    renderGradientEditor();
+                    updateColorPickerForSelection();
+                });
+
+                el.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    deleteStopAt(idx);
+                });
+
+                el.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteStopAt(idx);
+                });
+
+                gradientStopsEl.appendChild(el);
+            });
+        }
+
+        function updateColorPickerForSelection() {
+            if (selectedStopIndex !== null && currentStops[selectedStopIndex]) {
+                stopColorEl.value = currentStops[selectedStopIndex].color;
+            }
+        }
+
+        function deleteStopAt(idx) {
+            if (currentStops.length <= 2) return;
+            currentStops.splice(idx, 1);
+            if (selectedStopIndex === idx) selectedStopIndex = null;
+            else if (selectedStopIndex !== null && selectedStopIndex > idx) selectedStopIndex--;
+            renderGradientEditor();
+            rebuildGradientTexture();
+            render();
+        }
+
+        // Click on preview adds a stop
+        gradientPreviewEl.addEventListener('click', (e) => {
+            const rect = gradientPreviewEl.getBoundingClientRect();
+            let pos = (e.clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos));
+            // Sample existing gradient color at that position for sensible default
+            const data = buildGradientData(currentStops);
+            const i = Math.min(255, Math.max(0, Math.round(pos * 255)));
+            const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+            const color = '#' +
+                r.toString(16).padStart(2, '0') +
+                g.toString(16).padStart(2, '0') +
+                b.toString(16).padStart(2, '0');
+            currentStops.push({ pos, color });
+            selectedStopIndex = currentStops.length - 1;
+            updateColorPickerForSelection();
+            renderGradientEditor();
+            rebuildGradientTexture();
+            render();
+        });
+
+        stopColorEl.addEventListener('input', (e) => {
+            if (selectedStopIndex === null) return;
+            currentStops[selectedStopIndex].color = e.target.value;
+            renderGradientEditor();
+            rebuildGradientTexture();
+            render();
+        });
+
+        document.getElementById('add-stop-btn').addEventListener('click', () => {
+            const pos = 0.5;
+            const data = buildGradientData(currentStops);
+            const i = Math.round(pos * 255);
+            const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+            const color = '#' +
+                r.toString(16).padStart(2, '0') +
+                g.toString(16).padStart(2, '0') +
+                b.toString(16).padStart(2, '0');
+            currentStops.push({ pos, color });
+            selectedStopIndex = currentStops.length - 1;
+            updateColorPickerForSelection();
+            renderGradientEditor();
+            rebuildGradientTexture();
+            render();
+        });
+
+        document.getElementById('delete-stop-btn').addEventListener('click', () => {
+            if (selectedStopIndex === null) return;
+            deleteStopAt(selectedStopIndex);
+        });
+
+        // ---------- Save / delete custom schemes ----------
+        function persistCustomSchemes() {
+            localStorage.setItem('mandelbrot_custom_schemes', JSON.stringify(customSchemes));
+        }
+
+        function rebuildCustomOptgroup() {
+            const optgroup = document.getElementById('custom-optgroup');
+            optgroup.innerHTML = '';
+            const names = Object.keys(customSchemes).sort();
+            names.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                optgroup.appendChild(opt);
+            });
+            optgroup.style.display = names.length ? '' : 'none';
+        }
+
+        function updateDeleteSchemeButton() {
+            const btn = document.getElementById('delete-scheme-btn');
+            btn.disabled = !customSchemes[currentSchemeName];
+            btn.style.opacity = btn.disabled ? '0.4' : '1';
+            btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+        }
+
+        document.getElementById('save-scheme-btn').addEventListener('click', () => {
+            const name = prompt('Name for this color scheme:');
+            if (!name) return;
+            const trimmed = name.trim();
+            if (!trimmed) return;
+            if (builtInSchemes[trimmed]) {
+                alert('That name collides with a built-in scheme. Pick another.');
+                return;
+            }
+            customSchemes[trimmed] = currentStops.map(s => ({ ...s }));
+            persistCustomSchemes();
+            rebuildCustomOptgroup();
+            currentSchemeName = trimmed;
+            document.getElementById('color-scheme').value = trimmed;
+            updateDeleteSchemeButton();
+        });
+
+        document.getElementById('delete-scheme-btn').addEventListener('click', () => {
+            if (!customSchemes[currentSchemeName]) return;
+            if (!confirm(`Delete custom scheme "${currentSchemeName}"?`)) return;
+            delete customSchemes[currentSchemeName];
+            persistCustomSchemes();
+            rebuildCustomOptgroup();
+            document.getElementById('color-scheme').value = 'classic';
+            selectScheme('classic');
+        });
+
+        // ---------- Initialize ----------
         canvas.style.cursor = 'grab';
+        rebuildCustomOptgroup();
+        renderGradientEditor();
+        rebuildGradientTexture();
+        updateDeleteSchemeButton();
         resize();
     </script>
 </body>
